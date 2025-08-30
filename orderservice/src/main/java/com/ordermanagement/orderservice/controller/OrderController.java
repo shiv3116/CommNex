@@ -2,6 +2,8 @@ package com.ordermanagement.orderservice.controller;
 
 import com.ordermanagement.orderservice.dto.OrderRequest;
 import com.ordermanagement.orderservice.entity.Order;
+import com.ordermanagement.orderservice.events.OrderCreated;
+import com.ordermanagement.orderservice.kafka.KafkaOrderProducer;
 import com.ordermanagement.orderservice.repository.OrderRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,9 @@ public class OrderController {
     @Autowired
     private OrderRepository orderRepository;
 
+    @Autowired
+    private KafkaOrderProducer kafkaOrderProducer;
+
     @PostMapping("/placeorder")
     public ResponseEntity<?> createOrder(@Valid @RequestBody OrderRequest orderRequest) {
         try {
@@ -30,6 +35,10 @@ public class OrderController {
             order.setAmount(orderRequest.getAmount());
             order.setCreatedAt(LocalDateTime.now());
             orderRepository.save(order);
+            OrderCreated orderCreated = new OrderCreated(
+                    order.getId(), order.getUserId(), order.getProduct(), order.getQuantity(), order.getAmount()
+            );
+            kafkaOrderProducer.sendOrderCreatedEvent(orderCreated);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
