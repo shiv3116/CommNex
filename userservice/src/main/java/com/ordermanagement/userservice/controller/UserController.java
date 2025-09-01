@@ -32,11 +32,11 @@ public class UserController {
         return new ResponseEntity<>("{'status': '0', 'message': 'user registered successfully'}", HttpStatus.CREATED);
     }
 
-    @GetMapping("/user/{username}")
-    public ResponseEntity<?> getUser(@PathVariable String username) {
+    @GetMapping("/user/{id}")
+    public ResponseEntity<?> getUserById(@PathVariable long id) {
         Optional<User> user;
         try {
-            user = userRepository.findByUsername(username);
+            user = userRepository.findById(id);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
