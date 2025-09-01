@@ -11,4 +11,5 @@ public class OrderFailedEvent {
     private String orderId;
     private String product;
     private String reason;
+    private String userId;
 }

@@ -23,21 +23,21 @@ public class InventoryService {
     private KafkaEventProducer kafkaEventProducer;
 
     @Transactional
-    public void processOrder(String orderId, String product, String quantity) {
+    public void processOrder(String orderId, String userId, String product, String quantity) {
         int requiredQuantity = Integer.parseInt(quantity);
         Optional<Inventory> inventory = inventoryRepository.findByProduct(product);
         inventory.ifPresentOrElse( inv -> {
             int availableQuantity = inv.getAvailableQuantity();
             if(availableQuantity < requiredQuantity) {
-                kafkaEventProducer.publishOrderFailed(new OrderFailedEvent(orderId, product, "product is out of stock"));
+                kafkaEventProducer.publishOrderFailed(new OrderFailedEvent(orderId, product, "product is out of stock", userId));
             } else {
                 availableQuantity -= requiredQuantity;
                 inv.setAvailableQuantity(availableQuantity);
                 inventoryRepository.save(inv);
-                kafkaEventProducer.publishOrderConfirmed(new OrderConfirmedEvent(orderId, product));
+                kafkaEventProducer.publishOrderConfirmed(new OrderConfirmedEvent(orderId, product, userId));
             }
         }, () -> {
-            kafkaEventProducer.publishOrderFailed(new OrderFailedEvent(orderId, product, "product not available in inventory"));
+            kafkaEventProducer.publishOrderFailed(new OrderFailedEvent(orderId, product, "product not available in inventory", userId));
             throw new RuntimeException("product not available in inventory");
         });
     }

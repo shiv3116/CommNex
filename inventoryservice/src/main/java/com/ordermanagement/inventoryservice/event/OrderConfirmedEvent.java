@@ -10,4 +10,5 @@ import lombok.NoArgsConstructor;
 public class OrderConfirmedEvent {
     private String orderId;
     private String product;
+    private String userId;
 }

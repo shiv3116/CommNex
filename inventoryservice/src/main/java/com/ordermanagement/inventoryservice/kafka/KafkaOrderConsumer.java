@@ -22,6 +22,8 @@ public class KafkaOrderConsumer {
         String orderId = node.get("orderId").asText();
         String product = node.get("product").asText();
         String quantity = node.get("quantity").asText();
+        String userId = node.get("userId").asText();
 
+        inventoryService.processOrder(orderId, userId, product, quantity);
     }
  }
