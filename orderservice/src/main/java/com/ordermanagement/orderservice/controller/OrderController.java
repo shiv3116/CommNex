@@ -5,6 +5,7 @@ import com.ordermanagement.orderservice.entity.Order;
 import com.ordermanagement.orderservice.events.OrderCreated;
 import com.ordermanagement.orderservice.kafka.KafkaOrderProducer;
 import com.ordermanagement.orderservice.repository.OrderRepository;
+import com.ordermanagement.orderservice.service.OrderService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -14,6 +15,8 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequestMapping("/ordermanagement")
@@ -25,24 +28,18 @@ public class OrderController {
     @Autowired
     private KafkaOrderProducer kafkaOrderProducer;
 
+    @Autowired
+    private OrderService orderService;
+
     @PostMapping("/placeorder")
     public ResponseEntity<?> createOrder(@Valid @RequestBody OrderRequest orderRequest) {
+        String res;
         try {
-            Order order = new Order();
-            order.setUserId(orderRequest.getUserId());
-            order.setProduct(orderRequest.getProduct());
-            order.setQuantity(orderRequest.getQuantity());
-            order.setAmount(orderRequest.getAmount());
-            order.setCreatedAt(LocalDateTime.now());
-            orderRepository.save(order);
-            OrderCreated orderCreated = new OrderCreated(
-                    order.getId(), order.getUserId(), order.getProduct(), order.getQuantity(), order.getAmount()
-            );
-            kafkaOrderProducer.sendOrderCreatedEvent(orderCreated);
+            res = orderService.placeOrder(orderRequest);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        return new ResponseEntity<>("{'status':'0', 'message':'order placed successfully'}", HttpStatus.CREATED);
+        return new ResponseEntity<>(res, HttpStatus.CREATED);
     }
 
     @GetMapping("/order/{userId}")
