@@ -19,7 +19,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
-@RequestMapping("/ordermanagement")
+@RequestMapping("/orders")
 public class OrderController {
 
     @Autowired
